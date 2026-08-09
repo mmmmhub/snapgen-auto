@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+automation/node_modules/
+automation/dist/
+*.js.map
+*.d.ts
+.env
+.env.local
+automation/.cache/
+automation/logs/
+automation/screenshots/
+*.log
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
