@@ -1,429 +1,144 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎬 SnapGen AI - مولد الفيديو الآلي</title>
-  <style>
-    :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --surface2: #1a1a25;
-      --border: #2a2a3a;
-      --primary: #8b5cf6;
-      --primary-glow: rgba(139, 92, 246, 0.3);
-      --success: #10b981;
-      --warning: #f59e0b;
-      --error: #ef4444;
-      --text: #e2e8f0;
-      --text2: #94a3b8;
-      --text3: #64748b;
-      --radius: 12px;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* === HEADER === */
-    .header {
-      width: 100%;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(20px);
-    }
-    .header .logo {
-      font-size: 1.3rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .header .status-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--success); box-shadow: 0 0 10px var(--success);
-      display: inline-block; margin-left: 6px;
-    }
-    .header .status-text { font-size: 0.85rem; color: var(--text2); }
-
-    .container {
-      max-width: 720px; width: 100%; padding: 32px 20px;
-      display: flex; flex-direction: column; gap: 24px;
-    }
-
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 24px; transition: all 0.3s ease;
-    }
-    .card:hover { border-color: var(--primary); box-shadow: 0 0 30px var(--primary-glow); }
-    .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-
-    .form-group { margin-bottom: 16px; }
-    .form-label { display: block; font-size: 0.9rem; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
-    
-    textarea {
-      width: 100%; min-height: 100px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 8px; padding: 12px;
-      color: var(--text); font-size: 0.95rem; font-family: inherit;
-      resize: vertical; transition: border 0.3s;
-    }
-    textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
-    textarea::placeholder { color: var(--text3); }
-
-    .settings-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-    .setting-btn {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-      padding: 10px 14px; color: var(--text); font-size: 0.85rem; cursor: pointer;
-      transition: all 0.2s; text-align: center; font-family: inherit;
-    }
-    .setting-btn:hover { border-color: var(--primary); background: rgba(139, 92, 246, 0.1); }
-    .setting-btn.active { border-color: var(--primary); background: rgba(139, 92, 246, 0.2); box-shadow: 0 0 10px var(--primary-glow); }
-
-    .generate-btn {
-      width: 100%; padding: 14px;
-      background: linear-gradient(135deg, var(--primary), #7c3aed);
-      border: none; border-radius: 10px; color: white; font-size: 1.05rem;
-      font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: inherit;
-      position: relative; overflow: hidden;
-    }
-    .generate-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px var(--primary-glow); }
-    .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .generate-btn .spinner {
-      display: none; width: 18px; height: 18px;
-      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-      border-radius: 50%; animation: spin 0.6s linear infinite; margin-left: 8px;
-    }
-    .generate-btn.loading .spinner { display: inline-block; }
-    .generate-btn.loading .btn-text { display: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .status-card {
-      border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 16px 20px; display: none; align-items: center; gap: 12px;
-    }
-    .status-card.show { display: flex; }
-    .status-card.queued { background: rgba(139, 92, 246, 0.1); border-color: var(--primary); }
-    .status-card.processing { background: rgba(245, 158, 11, 0.1); border-color: var(--warning); }
-    .status-card.completed { background: rgba(16, 185, 129, 0.1); border-color: var(--success); }
-    .status-card.error { background: rgba(239, 68, 68, 0.1); border-color: var(--error); }
-    .status-icon { font-size: 1.5rem; flex-shrink: 0; }
-    .status-info { flex: 1; }
-    .status-info .title { font-weight: 600; font-size: 0.95rem; }
-    .status-info .subtitle { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
-
-    .video-container { display: none; margin-top: 16px; }
-    .video-container.show { display: block; }
-    .video-container video { width: 100%; border-radius: var(--radius); border: 1px solid var(--border); }
-    .download-link {
-      display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-      padding: 10px 20px; background: var(--success); color: white;
-      text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-    .download-link:hover { box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
-
-    .history-item {
-      display: flex; align-items: center; gap: 12px; padding: 12px;
-      background: var(--surface2); border-radius: 8px; margin-bottom: 8px;
-      border: 1px solid transparent; cursor: pointer; transition: all 0.2s;
-    }
-    .history-item:hover { border-color: var(--border); background: var(--surface); }
-    .history-item .thumb { width: 48px; height: 48px; border-radius: 6px; background: var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    .history-item .info { flex: 1; min-width: 0; }
-    .history-item .info .prompt { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .history-item .info .meta { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
-    .history-item .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; flex-shrink: 0; }
-    .badge-completed { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-    .badge-processing { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-    .badge-error { background: rgba(239, 68, 68, 0.2); color: var(--error); }
-    .badge-queued { background: rgba(139, 92, 246, 0.2); color: var(--primary); }
-
-    .empty-state { text-align: center; padding: 32px; color: var(--text3); }
-    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
-
-    .footer { margin-top: auto; padding: 16px; text-align: center; color: var(--text3); font-size: 0.8rem; border-top: 1px solid var(--border); width: 100%; }
-
-    @media (max-width: 500px) {
-      .container { padding: 16px 12px; }
-      .card { padding: 16px; }
-      .settings-row { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnapGen AI - Veo Generator</title>
+<style>
+:root{--bg:#0a0a0f;--s:#13131a;--s2:#1a1a25;--b:#2a2a3a;--p:#8b5cf6;--pg:rgba(139,92,246,.3);--ok:#10b981;--w:#f59e0b;--e:#ef4444;--t:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.h{width:100%;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);background:var(--s);position:sticky;top:0;z-index:100}
+.h .logo{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--p),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.h .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);display:inline-block;margin-left:6px}
+.h .st{font-size:.85rem;color:var(--t2)}
+.c{max-width:720px;width:100%;padding:32px 20px;display:flex;flex-direction:column;gap:24px}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:24px}
+.ct{font-size:1.1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:.9rem;color:var(--t2);margin-bottom:6px;font-weight:500}
+textarea{width:100%;min-height:100px;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:12px;color:var(--t);font-size:.95rem;font-family:inherit;resize:vertical}
+textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 15px var(--pg)}
+.sr{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.sb{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 14px;color:var(--t);font-size:.85rem;cursor:pointer;text-align:center;font-family:inherit;transition:all .2s}
+.sb:hover{border-color:var(--p);background:rgba(139,92,246,.1)}
+.sb.on{border-color:var(--p);background:rgba(139,92,246,.2);box-shadow:0 0 10px var(--pg)}
+.gb{width:100%;padding:16px;background:linear-gradient(135deg,var(--p),#7c3aed);border:none;border-radius:10px;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit}
+.gb:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px var(--pg)}
+.gb:disabled{opacity:.5;cursor:not-allowed}
+.sc{border:1px solid var(--b);border-radius:var(--r);padding:16px 20px;display:none;align-items:center;gap:12px}
+.sc.show{display:flex}
+.sc.queued{background:rgba(139,92,246,.1);border-color:var(--p)}
+.sc.processing{background:rgba(245,158,11,.1);border-color:var(--w)}
+.sc.completed{background:rgba(16,185,129,.1);border-color:var(--ok)}
+.sc.error{background:rgba(239,68,68,.1);border-color:var(--e)}
+.si{font-size:1.5rem}
+.sinfo{flex:1}
+.sinfo .tl{font-weight:600;font-size:.95rem}
+.sinfo .st2{font-size:.8rem;color:var(--t2);margin-top:2px}
+.vc{display:none;margin-top:16px}
+.vc.show{display:block}
+.vc video{width:100%;border-radius:var(--r);border:1px solid var(--b)}
+.dl{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:10px 20px;background:var(--ok);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:.9rem}
+.hi{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border-radius:8px;margin-bottom:8px;border:1px solid transparent;cursor:pointer}
+.hi:hover{border-color:var(--b);background:var(--s)}
+.hi .th{width:48px;height:48px;border-radius:6px;background:var(--b);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.hi .inf{flex:1;min-width:0}
+.hi .inf .pr{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hi .inf .mt{font-size:.75rem;color:var(--t3);margin-top:2px}
+.hi .badge{padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+.bok{background:rgba(16,185,129,.2);color:var(--ok)}
+.bpr{background:rgba(245,158,11,.2);color:var(--w)}
+.ber{background:rgba(239,68,68,.2);color:var(--e)}
+.bqu{background:rgba(139,92,246,.2);color:var(--p)}
+.em{text-align:center;padding:32px;color:var(--t3)}
+.em .ic{font-size:3rem;margin-bottom:12px}
+.ft{margin-top:auto;padding:16px;text-align:center;color:var(--t3);font-size:.8rem;border-top:1px solid var(--b);width:100%}
+</style>
 </head>
 <body>
-  <header class="header">
-    <div class="logo">🎬 SnapGen AI</div>
-    <div>
-      <span class="status-dot" id="statusDot"></span>
-      <span class="status-text" id="statusText">متصل</span>
-    </div>
-  </header>
+<header class="h"><div class="logo">SnapGen AI</div><div><span class="dot" id="dot"></span><span class="st" id="st">جاري الاتصال...</span></div></header>
+<div class="c">
+<div class="card">
+<div class="ct">✨ انشاء فيديو - Veo 3.1 Fast</div>
+<div class="fg"><label class="fl">وصف الفيديو (Prompt)</label><textarea id="prompt" placeholder="اكتب وصف الفيديو هنا...
+مثال: A cat flying over pyramids at sunset, cinematic 4k"></textarea><small style="color:var(--t3);font-size:.75rem"><span id="cc">0</span> حرف</small></div>
+<div class="fg"><label class="fl">الابعاد</label><div class="sr" id="rg"><button class="sb on" data-v="16:9">16:9</button><button class="sb" data-v="9:16">9:16</button><button class="sb" data-v="1:1">1:1</button></div></div>
+<div class="fg"><label class="fl">الجودة</label><div class="sr" id="qg"><button class="sb" data-v="720p">720p</button><button class="sb on" data-v="1080p">1080p</button></div></div>
+<div class="fg"><label class="fl">المدة</label><div class="sr" id="dg"><button class="sb" data-v="6">6s</button><button class="sb on" data-v="8">8s</button><button class="sb" data-v="10">10s</button></div></div>
+<button class="gb" id="gb" onclick="go()">توليد الفيديو</button>
+</div>
+<div class="sc" id="scard"><span class="si" id="si">-</span><div class="sinfo"><div class="tl" id="stl"></div><div class="st2" id="sst"></div></div></div>
+<div class="vc card" id="vr"><div class="ct">الفيديو جاهز!</div><video id="vp" controls></video><a class="dl" id="dll" href="#" target="_blank">تحميل الفيديو</a></div>
+<div class="card"><div class="ct">اخر الفيديوهات</div><div id="hl"><div class="em"><div class="ic">-</div><div>لا توجد فيديوهات</div></div></div></div>
+</div>
+<footer class="ft">GitHub Actions + Playwright + Supabase</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+var SU='https://qsarztvqgjgqcokjqagt.supabase.co';
+var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzYXJ6dHZxZ2pncWNva2pxYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODY4MDcsImV4cCI6MjEwMTg2MjgwN30.B7K5F8aPWrID4A_Fm6Vor16OY3CjFLZRtNgSmWdOLlM';
+var GO='mmmmhub',GR='snapgen-auto';
+var GT=(function(){return ['g','h','p','_','A','k','6','H','2','t','Q','S','X','q','6','q','E','o','P','5','E','J','F','v','L','M','x','X','t','m','B','e','n','h','4','K','c','U','W','o'].join('');})();
+var sb=null,jid=null,tmr=null;
+var st={ratio:'16:9',quality:'1080p',duration:'8'};
 
-  <div class="container">
-    <div class="card" id="genCard">
-      <div class="card-title">✨ إنشاء فيديو جديد</div>
-      <div class="form-group">
-        <label class="form-label">📝 وصف الفيديو (Prompt)</label>
-        <textarea id="promptInput" placeholder="اكتب وصف الفيديو اللي عايز تولده... مثال: قطه تطير فوق الاهرامات، تصوير سينمائي، غروب الشمس، 4k" maxlength="5000"></textarea>
-        <small style="color:var(--text3);font-size:0.75rem;margin-top:4px;display:block"><span id="charCount">0</span> / 5000 حرف</small>
-      </div>
-      <div class="form-group">
-        <label class="form-label">🎯 الموديل</label>
-        <div class="settings-row" id="modelGroup">
-          <button class="setting-btn active" data-value="veo">Veo 3.1 Fast</button>
-          <button class="setting-btn" data-value="grok">Grok xAI</button>
-          <button class="setting-btn" data-value="bytedance">ByteDance Seed</button>
-          <button class="setting-btn" data-value="kling">Kling</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">📐 الأبعاد</label>
-        <div class="settings-row" id="ratioGroup">
-          <button class="setting-btn active" data-value="16:9">16:9 (أفقي)</button>
-          <button class="setting-btn" data-value="9:16">9:16 (رأسي)</button>
-          <button class="setting-btn" data-value="1:1">1:1 (مربع)</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">🎬 الجودة</label>
-        <div class="settings-row" id="qualityGroup">
-          <button class="setting-btn" data-value="720p">720p</button>
-          <button class="setting-btn active" data-value="1080p">1080p</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">⏱️ المدة</label>
-        <div class="settings-row" id="durationGroup">
-          <button class="setting-btn" data-value="6">6 ثوانٍ</button>
-          <button class="setting-btn active" data-value="8">8 ثوانٍ</button>
-          <button class="setting-btn" data-value="10">10 ثوانٍ</button>
-        </div>
-      </div>
-      <button class="generate-btn" id="generateBtn" onclick="triggerGeneration()">
-        <span class="btn-text">🚀 توليد الفيديو</span>
-        <span class="spinner"></span>
-      </button>
-    </div>
+function isb(){try{sb=supabase.createClient(SU,SK);uS(true);return true}catch(e){uS(false);return false}}
+function uS(ok){var d=document.getElementById('dot');var t=document.getElementById('st');if(ok){d.style.background='var(--ok)';d.style.boxShadow='0 0 10px var(--ok)';t.textContent='متصل - جاهز'}else{d.style.background='var(--e)';d.style.boxShadow='0 0 10px var(--e)';t.textContent='خطا في الاتصال'}}
+function sSC(s,ti,su){var c=document.getElementById('scard');var ic={queued:'📬',processing:'⚙️',completed:'✅',error:'❌'};c.className='sc show '+s;document.getElementById('si').textContent=ic[s]||'-';document.getElementById('stl').textContent=ti;document.getElementById('sst').textContent=su||''}
+function hSC(){document.getElementById('scard').classList.remove('show')}
+function sV(u){document.getElementById('vp').src=u;document.getElementById('dll').href=u;document.getElementById('vr').classList.add('show');document.getElementById('vr').scrollIntoView({behavior:'smooth'})}
+function hV(){document.getElementById('vr').classList.remove('show')}
+function sL(l){var b=document.getElementById('gb');b.disabled=l;b.style.opacity=l?'.6':'1';b.textContent=l?'جاري التوليد...':'توليد الفيديو'}
 
-    <div class="status-card" id="statusCard">
-      <span class="status-icon" id="statusIcon">⏳</span>
-      <div class="status-info">
-        <div class="title" id="statusTitle">جاري الإرسال...</div>
-        <div class="subtitle" id="statusSubtitle"></div>
-      </div>
-    </div>
+document.querySelectorAll('.sr').forEach(function(g){g.addEventListener('click',function(e){if(!e.target.classList.contains('sb'))return;g.querySelectorAll('.sb').forEach(function(b){b.classList.remove('on')});e.target.classList.add('on');var v=e.target.dataset.v;if(g.id==='rg')st.ratio=v;else if(g.id==='qg')st.quality=v;else if(g.id==='dg')st.duration=v})});
+document.getElementById('prompt').addEventListener('input',function(e){document.getElementById('cc').textContent=e.target.value.length});
 
-    <div class="video-container card" id="videoResult">
-      <div class="card-title">🎥 الفيديو جاهز!</div>
-      <video id="videoPlayer" controls></video>
-      <a class="download-link" id="downloadLink" href="#" download>⬇️ تحميل الفيديو</a>
-    </div>
+async function go(){
+  var p=document.getElementById('prompt').value.trim();
+  if(!p){alert('⚠️ من فضلك اكتب وصف الفيديو اولا');return}
+  if(!sb){alert('⚠️ قاعدة البيانات غير متصلة. جاري اعادة المحاولة...');isb();if(!sb)return}
+  hV();sL(true);hSC();
+  jid='job-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
+  try{
+    sSC('queued','📬 جاري تجهيز الطلب...','يتم حفظ المهمة في قاعدة البيانات');
+    var{error:ie}=await sb.from('video_jobs').insert({id:jid,prompt:p,model:'veo',ratio:st.ratio,quality:st.quality,duration:parseInt(st.duration),status:'queued',created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+    if(ie){console.error('Insert error:',ie);throw new Error(ie.message||'فشل حفظ المهمة')}
+    console.log('✅ Job:',jid);
+    sSC('queued','📬 تشغيل GitHub Actions...','يتم ارسال الطلب للتوليد');
+    try{await fetch('https://api.github.com/repos/'+GO+'/'+GR+'/dispatches',{method:'POST',mode:'no-cors',headers:{'Authorization':'token '+GT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({event_type:'generate-video',client_payload:{job_id:jid,prompt:p,model:'veo',ratio:st.ratio,quality:st.quality,duration:st.duration}})});console.log('Dispatch sent')}catch(e){console.warn('Dispatch:',e.message)}
+    sSC('processing','⚙️ جاري توليد الفيديو...','Veo 3.1 Fast | '+st.quality+' | '+st.duration+'s');
+    poll(jid);
+  }catch(e){console.error(e);sSC('error','❌ خطا',e.message||'حدث خطا غير معروف');sL(false)}
+}
 
-    <div class="card">
-      <div class="card-title">📋 آخر الفيديوهات</div>
-      <div id="historyList">
-        <div class="empty-state"><div class="icon">📭</div><div>لا توجد فيديوهات سابقة</div></div>
-      </div>
-    </div>
-  </div>
+function poll(id){
+  if(tmr)clearInterval(tmr);
+  var n=0;
+  tmr=setInterval(async function(){
+    n++;
+    try{var{data:d,error:e}=await sb.from('video_jobs').select('*').eq('id',id).single();
+    if(e||!d)return;
+    if(d.status==='completed'){clearInterval(tmr);tmr=null;sL(false);sSC('completed','✅ تم بنجاح!','الفيديو جاهز للتحميل');sV(d.video_url);lH()}
+    else if(d.status==='error'){clearInterval(tmr);tmr=null;sL(false);sSC('error','❌ فشل التوليد',d.error_message||'');lH()}
+    else if(d.status==='processing'){sSC('processing','⚙️ جاري التوليد...','محاولة '+n+' | Veo 3.1 Fast')}
+    }catch(x){}
+    if(n>=400){clearInterval(tmr);tmr=null;sL(false);sSC('error','⌛ مهلة','تجاوز 20 دقيقة')}
+  },3000);
+}
 
-  <footer class="footer">SnapGen AI Automation System · Powered by GitHub Actions + Playwright + Supabase</footer>
+async function lH(){
+  if(!sb)return;
+  try{var{data:d}=await sb.from('video_jobs').select('*').order('created_at',{ascending:false}).limit(20);
+  if(!d||d.length===0){document.getElementById('hl').innerHTML='<div class="em"><div class="ic">-</div><div>لا توجد فيديوهات</div></div>';return}
+  var ba={completed:'bok',processing:'bpr',error:'ber',queued:'bqu'};
+  var bt={completed:'✅ مكتمل',processing:'⚙️ قيد التوليد',error:'❌ فشل',queued:'📬 انتظار'};
+  document.getElementById('hl').innerHTML=d.map(function(i){var p=(i.prompt||'-').replace(/</g,'&lt;');return'<div class="hi"'+(i.status==='completed'&&i.video_url?' onclick="sV(\''+i.video_url.replace(/'/g,"\\'")+'\')"':'')+'><div class="th">'+(i.status==='completed'?'🎥':i.status==='error'?'❌':'⏳')+'</div><div class="inf"><div class="pr">'+p+'</div><div class="mt">'+(i.model||'Veo')+' - '+(i.ratio||'16:9')+' - '+(i.quality||'1080p')+' - '+(i.duration||'8')+'s</div></div><span class="badge '+(ba[i.status]||'bqu')+'">'+(bt[i.status]||i.status)+'</span></div>'}).join('')}catch(x){}
+}
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    const SUPABASE_URL = 'https://qsarztvqgjgqcokjqagt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzYXJ6dHZxZ2pncWNva2pxYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODY4MDcsImV4cCI6MjEwMTg2MjgwN30.B7K5F8aPWrID4A_Fm6Vor16OY3CjFLZRtNgSmWdOLlM';
-    const GITHUB_OWNER = 'mmmmhub';
-    const GITHUB_REPO = 'snapgen-auto';
-    const GITHUB_TOKEN = ['g','h','p','_','A','k','6','H','2','t','Q','S','X','q','6','q','E','o','P','5','E','J','F','v','L','M','x','X','t','m','B','e','n','h','4','K','c','U','W','o'].join('');
-    const TABLE_NAME = 'video_jobs';
-    const POLL_INTERVAL = 5000;
-
-    let currentJobId = null, pollTimer = null, supabase = null;
-    let settings = { model: 'veo', ratio: '16:9', quality: '1080p', duration: '8' };
-
-    function initSupabase() {
-      if (!SUPABASE_URL || SUPABASE_URL.startsWith('__')) { return false; }
-      try { supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return true; }
-      catch(e) { console.error('Supabase init error:', e); return false; }
-    }
-
-    function updateStatus(connected) {
-      const dot = document.getElementById('statusDot');
-      const text = document.getElementById('statusText');
-      dot.style.background = connected ? 'var(--success)' : 'var(--error)';
-      dot.style.boxShadow = connected ? '0 0 10px var(--success)' : '0 0 10px var(--error)';
-      text.textContent = connected ? 'متصل' : 'غير متصل';
-    }
-
-    function showStatusCard(status, title, subtitle) {
-      const card = document.getElementById('statusCard');
-      const icons = { queued: '📬', processing: '⚙️', completed: '✅', error: '❌' };
-      card.className = 'status-card show ' + status;
-      document.getElementById('statusIcon').textContent = icons[status] || '⏳';
-      document.getElementById('statusTitle').textContent = title;
-      document.getElementById('statusSubtitle').textContent = subtitle || '';
-    }
-
-    function hideStatusCard() { document.getElementById('statusCard').classList.remove('show'); }
-
-    function showVideo(url) {
-      const container = document.getElementById('videoResult');
-      document.getElementById('videoPlayer').src = url;
-      document.getElementById('downloadLink').href = url;
-      container.classList.add('show');
-      container.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function hideVideo() { document.getElementById('videoResult').classList.remove('show'); }
-
-    function setGenerateLoading(loading) {
-      const btn = document.getElementById('generateBtn');
-      loading ? (btn.classList.add('loading'), btn.disabled = true) : (btn.classList.remove('loading'), btn.disabled = false);
-    }
-
-    document.querySelectorAll('.settings-row').forEach(group => {
-      group.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('setting-btn')) return;
-        group.querySelectorAll('.setting-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        const v = e.target.dataset.value, id = group.id;
-        if (id === 'modelGroup') settings.model = v;
-        else if (id === 'ratioGroup') settings.ratio = v;
-        else if (id === 'qualityGroup') settings.quality = v;
-        else if (id === 'durationGroup') settings.duration = v;
-      });
-    });
-
-    document.getElementById('promptInput').addEventListener('input', (e) => {
-      document.getElementById('charCount').textContent = e.target.value.length;
-    });
-
-    async function triggerGeneration() {
-      const prompt = document.getElementById('promptInput').value.trim();
-      if (!prompt) { alert('⚠️ من فضلك اكتب وصف الفيديو أولاً'); return; }
-      if (!supabase && !initSupabase()) { alert('⚠️ قاعدة البيانات غير مهيأة.'); return; }
-
-      hideVideo(); setGenerateLoading(true); hideStatusCard();
-      const jobId = 'job-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-      currentJobId = jobId;
-
-      try {
-        showStatusCard('queued', 'جاري إرسال الطلب...', 'يتم إدخال المهمة في قاعدة البيانات');
-        
-        const { error: insertError } = await supabase.from(TABLE_NAME).insert({
-          id: jobId, prompt, model: settings.model, ratio: settings.ratio,
-          quality: settings.quality, duration: parseInt(settings.duration),
-          status: 'queued', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
-        });
-        if (insertError) throw new Error('فشل إدخال المهمة: ' + insertError.message);
-
-        showStatusCard('queued', 'جاري تشغيل الأتمتة...', 'يتم تفعيل GitHub Actions');
-
-        try {
-          await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/dispatches`, {
-            method: 'POST',
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event_type: 'generate-video', client_payload: { job_id: jobId, prompt, model: settings.model, ratio: settings.ratio, quality: settings.quality, duration: settings.duration } })
-          });
-        } catch(e) { console.warn('Dispatch may have failed:', e.message); }
-
-        showStatusCard('processing', 'جاري توليد الفيديو...', 'الموديل: ' + settings.model + ' | الأبعاد: ' + settings.ratio + ' | الجودة: ' + settings.quality);
-        startPolling(jobId);
-      } catch(error) {
-        console.error('Generation error:', error);
-        showStatusCard('error', 'حدث خطأ', error.message);
-        setGenerateLoading(false);
-      }
-    }
-
-    function startPolling(jobId) {
-      if (pollTimer) clearInterval(pollTimer);
-      let attempts = 0;
-      pollTimer = setInterval(async () => {
-        attempts++;
-        try {
-          const { data, error } = await supabase.from(TABLE_NAME).select('*').eq('id', jobId).single();
-          if (error || !data) return;
-          if (data.status === 'completed') {
-            clearInterval(pollTimer); pollTimer = null;
-            setGenerateLoading(false);
-            showStatusCard('completed', '✅ تم بنجاح!', 'الفيديو جاهز للتحميل');
-            showVideo(data.video_url); loadHistory();
-          } else if (data.status === 'error') {
-            clearInterval(pollTimer); pollTimer = null;
-            setGenerateLoading(false);
-            showStatusCard('error', '❌ فشل التوليد', data.error_message || 'خطأ غير معروف');
-            loadHistory();
-          } else if (data.status === 'processing') {
-            showStatusCard('processing', '⚙️ جاري التوليد...', `المحاولة ${attempts} | ${data.model || settings.model}`);
-          }
-        } catch(e) {}
-        if (attempts >= 240) {
-          clearInterval(pollTimer); pollTimer = null;
-          setGenerateLoading(false);
-          showStatusCard('error', '⌛ انتهت المهلة', 'استغرق التوليد وقتاً أطول من المتوقع');
-        }
-      }, POLL_INTERVAL);
-    }
-
-    async function loadHistory() {
-      if (!supabase && !initSupabase()) return;
-      try {
-        const { data, error } = await supabase.from(TABLE_NAME).select('*').order('created_at', { ascending: false }).limit(20);
-        if (error || !data || data.length === 0) {
-          document.getElementById('historyList').innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>لا توجد فيديوهات سابقة</div></div>';
-          return;
-        }
-        const badges = { completed: 'badge-completed', processing: 'badge-processing', error: 'badge-error', queued: 'badge-queued' };
-        const texts = { completed: '✅ مكتمل', processing: '⚙️ قيد التوليد', error: '❌ فشل', queued: '📬 انتظار' };
-        document.getElementById('historyList').innerHTML = data.map(item => `
-          <div class="history-item" onclick="${item.status === 'completed' ? "showVideo('" + item.video_url + "')" : ''}">
-            <div class="thumb">${item.status === 'completed' ? '🎥' : item.status === 'error' ? '❌' : '⏳'}</div>
-            <div class="info">
-              <div class="prompt">${(item.prompt||'—').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-              <div class="meta">${item.model||'?'} · ${item.ratio||'?'} · ${item.quality||'?'} · ${item.duration||'?'}s</div>
-            </div>
-            <span class="badge ${badges[item.status]||'badge-queued'}">${texts[item.status]||item.status}</span>
-          </div>
-        `).join('');
-      } catch(e) { console.error('History error:', e); }
-    }
-
-    function init() {
-      const hasConfig = initSupabase();
-      updateStatus(hasConfig);
-      if (hasConfig) loadHistory();
-      const tracked = localStorage.getItem('snapgen_active_job');
-      if (tracked && hasConfig) { currentJobId = tracked; startPolling(tracked); }
-    }
-
-    const origTrigger = triggerGeneration;
-    triggerGeneration = async function() {
-      await origTrigger();
-      if (currentJobId) localStorage.setItem('snapgen_active_job', currentJobId);
-    };
-    const origShowVideo = showVideo;
-    showVideo = function(url) {
-      origShowVideo(url);
-      localStorage.removeItem('snapgen_active_job');
-    };
-    init();
-  </script>
+var init=isb();
+if(init){lH();var t=localStorage.getItem('saj');if(t){jid=t;poll(t)}}
+var _g=go;go=async function(){await _g();if(jid)localStorage.setItem('saj',jid)};
+var _sv=sV;sV=function(u){_sv(u);localStorage.removeItem('saj')};
+</script>
 </body>
 </html>
