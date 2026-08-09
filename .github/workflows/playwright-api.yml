@@ -1,0 +1,231 @@
+name: 🎬 SnapGen Video Generator
+
+on:
+  repository_dispatch:
+    types: [generate-video]
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Video prompt (وصف الفيديو)'
+        required: true
+        type: string
+      model:
+        description: 'AI Model'
+        required: false
+        type: choice
+        default: 'veo'
+        options: ['veo', 'grok', 'bytedance', 'kling']
+      ratio:
+        description: 'Aspect Ratio'
+        required: false
+        type: choice
+        default: '16:9'
+        options: ['16:9', '9:16', '1:1']
+      quality:
+        description: 'Resolution'
+        required: false
+        type: choice
+        default: '1080p'
+        options: ['720p', '1080p']
+      duration:
+        description: 'Duration (seconds)'
+        required: false
+        type: choice
+        default: '8'
+        options: ['6', '8', '10']
+
+env:
+  # Playwright & Node
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  NODE_VERSION: '20'
+
+jobs:
+  generate:
+    name: 🎥 Generate Video
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    
+    steps:
+      # ──────────────────────────────────────
+      # STEP 1: Checkout Repository
+      # ──────────────────────────────────────
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # ──────────────────────────────────────
+      # STEP 2: Setup Node.js with Cache
+      # ──────────────────────────────────────
+      - name: 🔧 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: automation/package-lock.json
+
+      # ──────────────────────────────────────
+      # STEP 3: Cache Playwright Browsers
+      #   🔥 KEY: Uses hash of Playwright version
+      #   to bust cache when version changes
+      # ──────────────────────────────────────
+      - name: 🗂️ Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('automation/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      # ──────────────────────────────────────
+      # STEP 4: Install NPM Dependencies
+      #   Uses cached node_modules from setup-node
+      # ──────────────────────────────────────
+      - name: 📦 Install Dependencies
+        working-directory: automation
+        run: npm ci
+
+      # ──────────────────────────────────────
+      # STEP 5: Install Playwright Browsers
+      #   Only if cache miss — otherwise skips (~2s)
+      # ──────────────────────────────────────
+      - name: 🌐 Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: automation
+        run: npx playwright install chromium
+
+      # Also install system deps for Chromium
+      - name: 🔧 Install System Dependencies
+        run: |
+          npx playwright install-deps chromium 2>/dev/null || true
+          sudo apt-get update -qq && sudo apt-get install -y -qq \
+            libatk-bridge2.0-0 \
+            libatk1.0-0 \
+            libcups2 \
+            libdrm2 \
+            libgbm1 \
+            libnss3 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxkbcommon0 \
+            libxrandr2 \
+            libpango-1.0-0 \
+            libasound2 2>/dev/null || true
+
+      # ──────────────────────────────────────
+      # STEP 6: Parse Input (from dispatch OR manual)
+      # ──────────────────────────────────────
+      - name: 📋 Parse Input Parameters
+        id: params
+        run: |
+          # Parse from repository_dispatch OR workflow_dispatch
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "JOB_ID=${{ github.event.client_payload.job_id }}" >> $GITHUB_OUTPUT
+            echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ github.event.client_payload.prompt }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "MODEL=${{ github.event.client_payload.model }}" >> $GITHUB_OUTPUT
+            echo "RATIO=${{ github.event.client_payload.ratio }}" >> $GITHUB_OUTPUT
+            echo "QUALITY=${{ github.event.client_payload.quality }}" >> $GITHUB_OUTPUT
+            echo "DURATION=${{ github.event.client_payload.duration }}" >> $GITHUB_OUTPUT
+          else
+            echo "JOB_ID=manual-$(date +%s)" >> $GITHUB_OUTPUT
+            echo "PROMPT<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ inputs.prompt }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "MODEL=${{ inputs.model }}" >> $GITHUB_OUTPUT
+            echo "RATIO=${{ inputs.ratio }}" >> $GITHUB_OUTPUT
+            echo "QUALITY=${{ inputs.quality }}" >> $GITHUB_OUTPUT
+            echo "DURATION=${{ inputs.duration }}" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "📋 Job ID: $(echo '${{ steps.params.outputs.JOB_ID }}' || echo 'N/A')"
+          echo "📝 Prompt length: $(echo '$PROMPT' | wc -c)"
+
+      # ──────────────────────────────────────
+      # STEP 7: Update Job Status → processing
+      # ──────────────────────────────────────
+      - name: 🔄 Update Status → processing
+        working-directory: automation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          JOB_ID: ${{ steps.params.outputs.JOB_ID }}
+        run: |
+          # Update job status to "processing"
+          node -e "
+          const { createClient } = require('@supabase/supabase-js');
+          (async () => {
+            const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+            await sb.from('video_jobs').update({
+              status: 'processing',
+              updated_at: new Date().toISOString()
+            }).eq('id', process.env.JOB_ID);
+            console.log('✅ Status updated to processing');
+          })();
+          "
+
+      # ──────────────────────────────────────
+      # STEP 8: Run Playwright Automation
+      # ──────────────────────────────────────
+      - name: 🤖 Run Video Generation
+        id: generate
+        working-directory: automation
+        env:
+          # SnapGen Credentials
+          SNAPGEN_EMAIL: ${{ secrets.SNAPGEN_EMAIL }}
+          SNAPGEN_PASSWORD: ${{ secrets.SNAPGEN_PASSWORD }}
+          SNAPGEN_BASE_URL: ${{ secrets.SNAPGEN_BASE_URL || 'https://snapgen.ai/?hard=true' }}
+          
+          # Job Parameters
+          JOB_ID: ${{ steps.params.outputs.JOB_ID }}
+          VIDEO_PROMPT: ${{ steps.params.outputs.PROMPT }}
+          VIDEO_MODEL: ${{ steps.params.outputs.MODEL }}
+          VIDEO_RATIO: ${{ steps.params.outputs.RATIO }}
+          VIDEO_QUALITY: ${{ steps.params.outputs.QUALITY }}
+          VIDEO_DURATION: ${{ steps.params.outputs.DURATION }}
+          
+          # Supabase (for saving result)
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          
+          # Cloudflare Turnstile Token (optional — for captcha bypass)
+          TURNSTILE_TOKEN: ${{ secrets.TURNSTILE_TOKEN || '' }}
+        run: npx tsx src/generate.ts
+
+      # ──────────────────────────────────────
+      # STEP 9: Handle Failure — Update Status
+      # ──────────────────────────────────────
+      - name: ❌ Mark Job as Failed
+        if: failure()
+        working-directory: automation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          JOB_ID: ${{ steps.params.outputs.JOB_ID }}
+        run: |
+          node -e "
+          const { createClient } = require('@supabase/supabase-js');
+          (async () => {
+            const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+            await sb.from('video_jobs').update({
+              status: 'error',
+              error_message: 'Workflow failed during execution',
+              updated_at: new Date().toISOString()
+            }).eq('id', process.env.JOB_ID);
+            console.log('❌ Job marked as error');
+          })();
+          "
+
+      # ──────────────────────────────────────
+      # STEP 10: Upload Artifacts (Debug)
+      # ──────────────────────────────────────
+      - name: 📤 Upload Screenshots & Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgen-output-${{ steps.params.outputs.JOB_ID || 'unknown' }}
+          path: |
+            automation/screenshots/
+            automation/logs/
+          retention-days: 7
