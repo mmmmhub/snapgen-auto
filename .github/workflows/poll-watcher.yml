@@ -1,0 +1,40 @@
+name: poll-watcher
+on:
+  schedule:
+    - cron: '* * * * *'
+  workflow_dispatch:
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install @supabase/supabase-js
+      - name: Check for queued jobs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          node -e "
+          const { createClient } = require('@supabase/supabase-js');
+          (async () => {
+            const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+            const { data } = await sb.from('video_jobs').select('*').eq('status','queued').order('created_at',{ascending:true}).limit(1);
+            if (data && data.length > 0) {
+              const job = data[0];
+              console.log('Found queued job:', job.id);
+              await sb.from('video_jobs').update({status:'processing',updated_at:new Date().toISOString()}).eq('id',job.id);
+              const resp = await fetch('https://api.github.com/repos/mmmmhub/snapgen-auto/dispatches', {
+                method:'POST',
+                headers:{'Authorization':'token ${{ secrets.GH_PAT }}','Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+                body:JSON.stringify({event_type:'generate-video',client_payload:{job_id:job.id,prompt:job.prompt,model:'veo',ratio:job.ratio,quality:job.quality,duration:''+job.duration}})
+              });
+              console.log('Dispatch status:', resp.status);
+            } else {
+              console.log('No queued jobs found');
+            }
+          })();
+          "
