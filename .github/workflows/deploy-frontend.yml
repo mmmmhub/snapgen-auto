@@ -24,28 +24,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Inject Secrets into Frontend
-        run: |
-          # Replace placeholders with actual secrets
-          sed -i "s|__SUPABASE_URL__|${{ secrets.SUPABASE_URL }}|g" frontend/index.html
-          sed -i "s|__SUPABASE_ANON_KEY__|${{ secrets.SUPABASE_ANON_KEY }}|g" frontend/index.html
-          sed -i "s|__GITHUB_OWNER__|${{ github.repository_owner }}|g" frontend/index.html
-          sed -i "s|__GITHUB_REPO__|${{ github.event.repository.name }}|g" frontend/index.html
-          sed -i "s|__GITHUB_TOKEN__|${{ secrets.GH_PAT }}|g" frontend/index.html
-          
-          echo "✅ Secrets injected into index.html"
-
-      - name: 📦 Setup Pages
+      - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: 📤 Upload Artifact
+      - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './frontend'
 
-      - name: 🌐 Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-
+        uses: actions/deploy-pages@v4
