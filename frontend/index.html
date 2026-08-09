@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎬 SnapGen AI - مولد الفيديو الآلي</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1a1a25;
+      --border: #2a2a3a;
+      --primary: #8b5cf6;
+      --primary-glow: rgba(139, 92, 246, 0.3);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* === HEADER === */
+    .header {
+      width: 100%;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+    .header .logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      display: inline-block;
+      margin-left: 6px;
+    }
+    .header .status-text {
+      font-size: 0.85rem;
+      color: var(--text2);
+    }
+
+    /* === MAIN CONTAINER === */
+    .container {
+      max-width: 720px;
+      width: 100%;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* === CARD === */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 30px var(--primary-glow);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* === FORM === */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--text2);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      transition: border 0.3s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+    textarea::placeholder { color: var(--text3); }
+
+    /* === SETTINGS ROW === */
+    .settings-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .setting-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      font-family: inherit;
+    }
+    .setting-btn:hover {
+      border-color: var(--primary);
+      background: rgba(139, 92, 246, 0.1);
+    }
+    .setting-btn.active {
+      border-color: var(--primary);
+      background: rgba(139, 92, 246, 0.2);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    /* === GENERATE BUTTON === */
+    .generate-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+    .generate-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px var(--primary-glow);
+    }
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .generate-btn .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 8px;
+    }
+    .generate-btn.loading .spinner { display: inline-block; }
+    .generate-btn.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* === STATUS === */
+    .status-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-card.show { display: flex; }
+    .status-card.queued { background: rgba(139, 92, 246, 0.1); border-color: var(--primary); }
+    .status-card.processing { background: rgba(245, 158, 11, 0.1); border-color: var(--warning); }
+    .status-card.completed { background: rgba(16, 185, 129, 0.1); border-color: var(--success); }
+    .status-card.error { background: rgba(239, 68, 68, 0.1); border-color: var(--error); }
+
+    .status-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .status-info { flex: 1; }
+    .status-info .title { font-weight: 600; font-size: 0.95rem; }
+    .status-info .subtitle { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
+
+    /* === VIDEO RESULT === */
+    .video-container {
+      display: none;
+      margin-top: 16px;
+    }
+    .video-container.show { display: block; }
+    .video-container video {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px 20px;
+      background: var(--success);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .download-link:hover {
+      box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* === HISTORY === */
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface2);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .history-item:hover {
+      border-color: var(--border);
+      background: var(--surface);
+    }
+    .history-item .thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      background: var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .history-item .info { flex: 1; min-width: 0; }
+    .history-item .info .prompt {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-item .info .meta {
+      font-size: 0.75rem;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+    .history-item .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .badge-completed { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .badge-processing { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .badge-error { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+    .badge-queued { background: rgba(139, 92, 246, 0.2); color: var(--primary); }
+
+    /* === EMPTY STATE === */
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--text3);
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* === FOOTER === */
+    .footer {
+      margin-top: auto;
+      padding: 16px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      width: 100%;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 500px) {
+      .container { padding: 16px 12px; }
+      .card { padding: 16px; }
+      .settings-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">🎬 SnapGen AI</div>
+    <div>
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">متصل</span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="container">
+
+    <!-- GENERATION CARD -->
+    <div class="card" id="genCard">
+      <div class="card-title">✨ إنشاء فيديو جديد</div>
+      
+      <div class="form-group">
+        <label class="form-label">📝 وصف الفيديو (Prompt)</label>
+        <textarea 
+          id="promptInput" 
+          placeholder="اكتب وصف الفيديو اللي عايز تولده... مثال: قطه تطير فوق الاهرامات، تصوير سينمائي، غروب الشمس، 4k"
+          maxlength="5000"
+        ></textarea>
+        <small style="color:var(--text3);font-size:0.75rem;margin-top:4px;display:block">
+          <span id="charCount">0</span> / 5000 حرف
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🎯 الموديل</label>
+        <div class="settings-row" id="modelGroup">
+          <button class="setting-btn active" data-value="veo">Veo 3.1 Fast</button>
+          <button class="setting-btn" data-value="grok">Grok xAI</button>
+          <button class="setting-btn" data-value="bytedance">ByteDance Seed</button>
+          <button class="setting-btn" data-value="kling">Kling</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">📐 الأبعاد</label>
+        <div class="settings-row" id="ratioGroup">
+          <button class="setting-btn active" data-value="16:9">16:9 (أفقي)</button>
+          <button class="setting-btn" data-value="9:16">9:16 (رأسي)</button>
+          <button class="setting-btn" data-value="1:1">1:1 (مربع)</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🎬 الجودة</label>
+        <div class="settings-row" id="qualityGroup">
+          <button class="setting-btn" data-value="720p">720p</button>
+          <button class="setting-btn active" data-value="1080p">1080p</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">⏱️ المدة</label>
+        <div class="settings-row" id="durationGroup">
+          <button class="setting-btn" data-value="6">6 ثوانٍ</button>
+          <button class="setting-btn active" data-value="8">8 ثوانٍ</button>
+          <button class="setting-btn" data-value="10">10 ثوانٍ</button>
+        </div>
+      </div>
+
+      <button class="generate-btn" id="generateBtn" onclick="triggerGeneration()">
+        <span class="btn-text">🚀 توليد الفيديو</span>
+        <span class="spinner"></span>
+      </button>
+    </div>
+
+    <!-- STATUS CARD -->
+    <div class="status-card" id="statusCard">
+      <span class="status-icon" id="statusIcon">⏳</span>
+      <div class="status-info">
+        <div class="title" id="statusTitle">جاري الإرسال...</div>
+        <div class="subtitle" id="statusSubtitle"></div>
+      </div>
+    </div>
+
+    <!-- VIDEO RESULT -->
+    <div class="video-container card" id="videoResult">
+      <div class="card-title">🎥 الفيديو جاهز!</div>
+      <video id="videoPlayer" controls></video>
+      <a class="download-link" id="downloadLink" href="#" download>
+        ⬇️ تحميل الفيديو
+      </a>
+    </div>
+
+    <!-- HISTORY CARD -->
+    <div class="card">
+      <div class="card-title">📋 آخر الفيديوهات</div>
+      <div id="historyList">
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <div>لا توجد فيديوهات سابقة</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    SnapGen AI Automation System · Powered by GitHub Actions + Playwright + Supabase
+  </footer>
+
+  <!-- SUPABASE SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <script>
+    // ==================== CONFIG ====================
+    // 🔴 سيتم استبدال هذه القيم عند النشر - لا تنسخ المفاتيح الحقيقية هنا
+    const SUPABASE_URL = '__SUPABASE_URL__';
+    const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+    
+    const GITHUB_OWNER = '__GITHUB_OWNER__';
+    const GITHUB_REPO = '__GITHUB_REPO__';
+    const GITHUB_TOKEN = '__GITHUB_TOKEN__'; // PAT with repo scope
+    
+    const TABLE_NAME = 'video_jobs';
+    const POLL_INTERVAL = 5000; // 5 seconds
+
+    // ==================== STATE ====================
+    let currentJobId = null;
+    let pollTimer = null;
+    let supabase = null;
+    let settings = {
+      model: 'veo',
+      ratio: '16:9',
+      quality: '1080p',
+      duration: '8'
+    };
+
+    // ==================== SUPABASE INIT ====================
+    function initSupabase() {
+      if (SUPABASE_URL.startsWith('__')) {
+        console.warn('⚠️ Supabase غير مهيأ - الرجاء إضافة المفاتيح');
+        updateStatus(false, '⚠️', 'قاعدة البيانات غير مهيأة', 'الرجاء إضافة Supabase URL و Key');
+        return false;
+      }
+      try {
+        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        return true;
+      } catch (e) {
+        console.error('Supabase init error:', e);
+        return false;
+      }
+    }
+
+    // ==================== UI HELPERS ====================
+    function updateStatus(connected, icon, title, subtitle) {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (connected) {
+        dot.style.background = 'var(--success)';
+        dot.style.boxShadow = '0 0 10px var(--success)';
+        text.textContent = 'متصل';
+      } else {
+        dot.style.background = 'var(--error)';
+        dot.style.boxShadow = '0 0 10px var(--error)';
+        text.textContent = 'غير متصل';
+      }
+    }
+
+    function showStatusCard(status, title, subtitle) {
+      const card = document.getElementById('statusCard');
+      const icon = document.getElementById('statusIcon');
+      const titleEl = document.getElementById('statusTitle');
+      const subEl = document.getElementById('statusSubtitle');
+      
+      card.className = 'status-card show ' + status;
+      const icons = { queued: '📬', processing: '⚙️', completed: '✅', error: '❌' };
+      icon.textContent = icons[status] || '⏳';
+      titleEl.textContent = title;
+      subEl.textContent = subtitle || '';
+    }
+
+    function hideStatusCard() {
+      document.getElementById('statusCard').classList.remove('show');
+    }
+
+    function showVideo(url) {
+      const container = document.getElementById('videoResult');
+      const player = document.getElementById('videoPlayer');
+      const link = document.getElementById('downloadLink');
+      
+      player.src = url;
+      link.href = url;
+      container.classList.add('show');
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideVideo() {
+      document.getElementById('videoResult').classList.remove('show');
+    }
+
+    function setGenerateLoading(loading) {
+      const btn = document.getElementById('generateBtn');
+      if (loading) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    // ==================== SETTINGS BUTTONS ====================
+    document.querySelectorAll('.settings-row').forEach(group => {
+      group.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('setting-btn')) return;
+        group.querySelectorAll('.setting-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        // Update settings state
+        const value = e.target.dataset.value;
+        const parentId = group.id;
+        if (parentId === 'modelGroup') settings.model = value;
+        if (parentId === 'ratioGroup') settings.ratio = value;
+        if (parentId === 'qualityGroup') settings.quality = value;
+        if (parentId === 'durationGroup') settings.duration = value;
+      });
+    });
+
+    // Character counter
+    document.getElementById('promptInput').addEventListener('input', (e) => {
+      document.getElementById('charCount').textContent = e.target.value.length;
+    });
+
+    // ==================== TRIGGER GENERATION ====================
+    async function triggerGeneration() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        alert('⚠️ من فضلك اكتب وصف الفيديو أولاً');
+        return;
+      }
+
+      if (!supabase && !initSupabase()) {
+        alert('⚠️ قاعدة البيانات غير مهيأة. الرجاء التأكد من إعداد Supabase.');
+        return;
+      }
+
+      // Reset UI
+      hideVideo();
+      setGenerateLoading(true);
+      hideStatusCard();
+
+      const jobId = 'job-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+      currentJobId = jobId;
+
+      try {
+        // 1. Insert job into Supabase
+        showStatusCard('queued', 'جاري إرسال الطلب...', 'يتم إدخال المهمة في قاعدة البيانات');
+        
+        const { error: insertError } = await supabase
+          .from(TABLE_NAME)
+          .insert({
+            id: jobId,
+            prompt: prompt,
+            model: settings.model,
+            ratio: settings.ratio,
+            quality: settings.quality,
+            duration: parseInt(settings.duration),
+            status: 'queued',
+            video_url: null,
+            error_message: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (insertError) throw new Error('فشل إدخال المهمة: ' + insertError.message);
+
+        // 2. Trigger GitHub Actions via repository_dispatch
+        showStatusCard('queued', 'جاري تشغيل الأتمتة...', 'يتم تفعيل GitHub Actions');
+        
+        const dispatchBody = {
+          event_type: 'generate-video',
+          client_payload: {
+            job_id: jobId,
+            prompt: prompt,
+            model: settings.model,
+            ratio: settings.ratio,
+            quality: settings.quality,
+            duration: settings.duration
+          }
+        };
+
+        // Try GitHub API via fetch
+        try {
+          const ghResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/dispatches`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(dispatchBody)
+            }
+          );
+
+          if (!ghResponse.ok && ghResponse.status !== 204) {
+            console.warn('GitHub dispatch may have failed, but continuing with polling...');
+          }
+        } catch (dispatchError) {
+          console.warn('GitHub dispatch error (might be CORS):', dispatchError.message);
+          // Continue anyway - the polling will catch the job
+        }
+
+        // 3. Start polling for result
+        showStatusCard('processing', 'جاري توليد الفيديو...', 'الموديل: ' + settings.model + ' | الأبعاد: ' + settings.ratio + ' | الجودة: ' + settings.quality);
+        startPolling(jobId);
+
+      } catch (error) {
+        console.error('Generation error:', error);
+        showStatusCard('error', 'حدث خطأ', error.message);
+        setGenerateLoading(false);
+      }
+    }
+
+    // ==================== POLLING ====================
+    function startPolling(jobId) {
+      // Clear any existing poll
+      if (pollTimer) clearInterval(pollTimer);
+
+      let attempts = 0;
+      const maxAttempts = 240; // 20 minutes max (240 * 5 seconds)
+
+      pollTimer = setInterval(async () => {
+        attempts++;
+        
+        try {
+          const { data, error } = await supabase
+            .from(TABLE_NAME)
+            .select('*')
+            .eq('id', jobId)
+            .single();
+
+          if (error) {
+            console.error('Poll error:', error);
+            return;
+          }
+
+          if (!data) return;
+
+          switch (data.status) {
+            case 'completed':
+              clearInterval(pollTimer);
+              pollTimer = null;
+              setGenerateLoading(false);
+              showStatusCard('completed', '✅ تم بنجاح!', 'الفيديو جاهز للتحميل');
+              showVideo(data.video_url);
+              loadHistory();
+              break;
+
+            case 'error':
+              clearInterval(pollTimer);
+              pollTimer = null;
+              setGenerateLoading(false);
+              showStatusCard('error', '❌ فشل التوليد', data.error_message || 'خطأ غير معروف');
+              loadHistory();
+              break;
+
+            case 'processing':
+              showStatusCard('processing', '⚙️ جاري التوليد...', 
+                `المحاولة ${attempts} | ${data.model || settings.model} | ${data.ratio || settings.ratio}`);
+              break;
+
+            case 'queued':
+              showStatusCard('queued', '📬 في الانتظار...', 'في انتظار بدء المعالجة');
+              break;
+          }
+        } catch (e) {
+          console.error('Poll exception:', e);
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+          setGenerateLoading(false);
+          showStatusCard('error', '⌛ انتهت المهلة', 'استغرق التوليد وقتاً أطول من المتوقع');
+        }
+      }, POLL_INTERVAL);
+    }
+
+    // ==================== LOAD HISTORY ====================
+    async function loadHistory() {
+      if (!supabase && !initSupabase()) return;
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLE_NAME)
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+
+        const container = document.getElementById('historyList');
+        
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>لا توجد فيديوهات سابقة</div></div>';
+          return;
+        }
+
+        container.innerHTML = data.map(item => {
+          const badgeClass = {
+            completed: 'badge-completed',
+            processing: 'badge-processing',
+            error: 'badge-error',
+            queued: 'badge-queued'
+          };
+          const badgeText = {
+            completed: '✅ مكتمل',
+            processing: '⚙️ قيد التوليد',
+            error: '❌ فشل',
+            queued: '📬 انتظار'
+          };
+
+          return `
+            <div class="history-item" onclick="${item.status === 'completed' ? "showVideo('" + item.video_url + "')" : ''}">
+              <div class="thumb">${item.status === 'completed' ? '🎥' : item.status === 'error' ? '❌' : '⏳'}</div>
+              <div class="info">
+                <div class="prompt">${escapeHtml(item.prompt || '—')}</div>
+                <div class="meta">${item.model || '?'} · ${item.ratio || '?'} · ${item.quality || '?'} · ${item.duration || '?'}s</div>
+              </div>
+              <span class="badge ${badgeClass[item.status] || 'badge-queued'}">${badgeText[item.status] || item.status}</span>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('History load error:', e);
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==================== INIT ====================
+    function init() {
+      const hasConfig = initSupabase();
+      if (hasConfig) {
+        loadHistory();
+        // Check for any stuck processing jobs
+        pollStuckJobs();
+      }
+      
+      // Start polling for any active job
+      // We'll check localStorage for a tracked job
+      const trackedJob = localStorage.getItem('snapgen_active_job');
+      if (trackedJob && hasConfig) {
+        currentJobId = trackedJob;
+        startPolling(trackedJob);
+        showStatusCard('processing', '⏳ استئناف المتابعة...', 'جاري متابعة المهمة السابقة');
+      }
+    }
+
+    async function pollStuckJobs() {
+      if (!supabase) return;
+      try {
+        const { data } = await supabase
+          .from(TABLE_NAME)
+          .select('id')
+          .in('status', ['processing', 'queued'])
+          .limit(5);
+        
+        if (data && data.length > 0) {
+          // Auto-resume polling for the most recent one
+          currentJobId = data[0].id;
+          startPolling(data[0].id);
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    // Track active job in localStorage
+    const origTrigger = triggerGeneration;
+    triggerGeneration = async function() {
+      await origTrigger();
+      if (currentJobId) {
+        localStorage.setItem('snapgen_active_job', currentJobId);
+      }
+    };
+
+    // Clean up completed jobs
+    const origShowVideo = showVideo;
+    showVideo = function(url) {
+      origShowVideo(url);
+      localStorage.removeItem('snapgen_active_job');
+    };
+
+    // Run on load
+    init();
+  </script>
+</body>
+</html>
