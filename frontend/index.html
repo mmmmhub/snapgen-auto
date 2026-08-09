@@ -1,144 +1,127 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SnapGen AI - Veo Generator</title>
-<style>
-:root{--bg:#0a0a0f;--s:#13131a;--s2:#1a1a25;--b:#2a2a3a;--p:#8b5cf6;--pg:rgba(139,92,246,.3);--ok:#10b981;--w:#f59e0b;--e:#ef4444;--t:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;flex-direction:column;align-items:center}
-.h{width:100%;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);background:var(--s);position:sticky;top:0;z-index:100}
-.h .logo{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--p),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.h .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);display:inline-block;margin-left:6px}
-.h .st{font-size:.85rem;color:var(--t2)}
-.c{max-width:720px;width:100%;padding:32px 20px;display:flex;flex-direction:column;gap:24px}
-.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:24px}
-.ct{font-size:1.1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.fg{margin-bottom:16px}
-.fl{display:block;font-size:.9rem;color:var(--t2);margin-bottom:6px;font-weight:500}
-textarea{width:100%;min-height:100px;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:12px;color:var(--t);font-size:.95rem;font-family:inherit;resize:vertical}
-textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 15px var(--pg)}
-.sr{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.sb{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 14px;color:var(--t);font-size:.85rem;cursor:pointer;text-align:center;font-family:inherit;transition:all .2s}
-.sb:hover{border-color:var(--p);background:rgba(139,92,246,.1)}
-.sb.on{border-color:var(--p);background:rgba(139,92,246,.2);box-shadow:0 0 10px var(--pg)}
-.gb{width:100%;padding:16px;background:linear-gradient(135deg,var(--p),#7c3aed);border:none;border-radius:10px;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit}
-.gb:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px var(--pg)}
-.gb:disabled{opacity:.5;cursor:not-allowed}
-.sc{border:1px solid var(--b);border-radius:var(--r);padding:16px 20px;display:none;align-items:center;gap:12px}
-.sc.show{display:flex}
-.sc.queued{background:rgba(139,92,246,.1);border-color:var(--p)}
-.sc.processing{background:rgba(245,158,11,.1);border-color:var(--w)}
-.sc.completed{background:rgba(16,185,129,.1);border-color:var(--ok)}
-.sc.error{background:rgba(239,68,68,.1);border-color:var(--e)}
-.si{font-size:1.5rem}
-.sinfo{flex:1}
-.sinfo .tl{font-weight:600;font-size:.95rem}
-.sinfo .st2{font-size:.8rem;color:var(--t2);margin-top:2px}
-.vc{display:none;margin-top:16px}
-.vc.show{display:block}
-.vc video{width:100%;border-radius:var(--r);border:1px solid var(--b)}
-.dl{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:10px 20px;background:var(--ok);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:.9rem}
-.hi{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border-radius:8px;margin-bottom:8px;border:1px solid transparent;cursor:pointer}
-.hi:hover{border-color:var(--b);background:var(--s)}
-.hi .th{width:48px;height:48px;border-radius:6px;background:var(--b);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
-.hi .inf{flex:1;min-width:0}
-.hi .inf .pr{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hi .inf .mt{font-size:.75rem;color:var(--t3);margin-top:2px}
-.hi .badge{padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
-.bok{background:rgba(16,185,129,.2);color:var(--ok)}
-.bpr{background:rgba(245,158,11,.2);color:var(--w)}
-.ber{background:rgba(239,68,68,.2);color:var(--e)}
-.bqu{background:rgba(139,92,246,.2);color:var(--p)}
-.em{text-align:center;padding:32px;color:var(--t3)}
-.em .ic{font-size:3rem;margin-bottom:12px}
-.ft{margin-top:auto;padding:16px;text-align:center;color:var(--t3);font-size:.8rem;border-top:1px solid var(--b);width:100%}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎬 SnapGen AI - مولد الفيديو الذكي</title>
+  <style>
+    :root{--bg:#0a0a0f;--s:#13131a;--s2:#1a1a25;--b:#2a2a3a;--p:#8b5cf6;--ok:#10b981;--w:#f59e0b;--e:#ef4444;--t:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--r:12px}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;flex-direction:column;align-items:center}
+    .header{width:100%;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);background:var(--s);position:sticky;top:0;z-index:100}
+    .logo{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--p),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .status{font-size:.85rem;color:var(--t2)}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);display:inline-block;margin-left:6px}
+    .dot.off{background:var(--e);box-shadow:0 0 10px var(--e)}
+    .container{max-width:720px;width:100%;padding:32px 20px;display:flex;flex-direction:column;gap:24px}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:24px}
+    .title{font-size:1.2rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+    .fg{margin-bottom:16px}
+    .fl{display:block;font-size:.9rem;color:var(--t2);margin-bottom:6px;font-weight:500}
+    textarea{width:100%;min-height:100px;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:12px;color:var(--t);font-size:.95rem;font-family:inherit;resize:vertical}
+    textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 15px rgba(139,92,246,.3)}
+    .sr{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+    .sb{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px;color:var(--t);font-size:.85rem;cursor:pointer;text-align:center;font-family:inherit;transition:all .2s}
+    .sb:hover{border-color:var(--p)}
+    .sb.on{border-color:var(--p);background:rgba(139,92,246,.2)}
+    .btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--p),#7c3aed);border:none;border-radius:10px;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s}
+    .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px rgba(139,92,246,.4)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px;vertical-align:middle}
+    .btn.loading .spinner{display:inline-block}
+    .status-card{border:1px solid var(--b);border-radius:var(--r);padding:16px 20px;display:none;align-items:center;gap:12px}
+    .status-card.show{display:flex}
+    .status-card.queued{background:rgba(139,92,246,.1);border-color:var(--p)}
+    .status-card.processing{background:rgba(245,158,11,.1);border-color:var(--w)}
+    .status-card.completed{background:rgba(16,185,129,.1);border-color:var(--ok)}
+    .status-card.error{background:rgba(239,68,68,.1);border-color:var(--e)}
+    .video-box{display:none;margin-top:16px}
+    .video-box.show{display:block}
+    .video-box video{width:100%;border-radius:var(--r);border:1px solid var(--b)}
+    .download-btn{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:10px 20px;background:var(--ok);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:.9rem}
+    .history-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border-radius:8px;margin-bottom:8px;border:1px solid transparent;cursor:pointer}
+    .history-item:hover{border-color:var(--b)}
+    .history-item .thumb{width:48px;height:48px;border-radius:6px;background:var(--b);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+    .history-item .info{flex:1;min-width:0}
+    .history-item .info .p{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .history-item .info .m{font-size:.75rem;color:var(--t3);margin-top:2px}
+    .badge{padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+    .badge-ok{background:rgba(16,185,129,.2);color:var(--ok)}
+    .badge-w{background:rgba(245,158,11,.2);color:var(--w)}
+    .badge-e{background:rgba(239,68,68,.2);color:var(--e)}
+    .badge-q{background:rgba(139,92,246,.2);color:var(--p)}
+    .empty{text-align:center;padding:32px;color:var(--t3)}
+    .ft{margin-top:auto;padding:16px;text-align:center;color:var(--t3);font-size:.8rem;border-top:1px solid var(--b);width:100%}
+    @media(max-width:500px){.container{padding:16px 12px}.card{padding:16px}.sr{grid-template-columns:repeat(2,1fr)}}
+  </style>
 </head>
 <body>
-<header class="h"><div class="logo">SnapGen AI</div><div><span class="dot" id="dot"></span><span class="st" id="st">جاري الاتصال...</span></div></header>
-<div class="c">
-<div class="card">
-<div class="ct">✨ انشاء فيديو - Veo 3.1 Fast</div>
-<div class="fg"><label class="fl">وصف الفيديو (Prompt)</label><textarea id="prompt" placeholder="اكتب وصف الفيديو هنا...
-مثال: A cat flying over pyramids at sunset, cinematic 4k"></textarea><small style="color:var(--t3);font-size:.75rem"><span id="cc">0</span> حرف</small></div>
-<div class="fg"><label class="fl">الابعاد</label><div class="sr" id="rg"><button class="sb on" data-v="16:9">16:9</button><button class="sb" data-v="9:16">9:16</button><button class="sb" data-v="1:1">1:1</button></div></div>
-<div class="fg"><label class="fl">الجودة</label><div class="sr" id="qg"><button class="sb" data-v="720p">720p</button><button class="sb on" data-v="1080p">1080p</button></div></div>
-<div class="fg"><label class="fl">المدة</label><div class="sr" id="dg"><button class="sb" data-v="6">6s</button><button class="sb on" data-v="8">8s</button><button class="sb" data-v="10">10s</button></div></div>
-<button class="gb" id="gb" onclick="go()">توليد الفيديو</button>
-</div>
-<div class="sc" id="scard"><span class="si" id="si">-</span><div class="sinfo"><div class="tl" id="stl"></div><div class="st2" id="sst"></div></div></div>
-<div class="vc card" id="vr"><div class="ct">الفيديو جاهز!</div><video id="vp" controls></video><a class="dl" id="dll" href="#" target="_blank">تحميل الفيديو</a></div>
-<div class="card"><div class="ct">اخر الفيديوهات</div><div id="hl"><div class="em"><div class="ic">-</div><div>لا توجد فيديوهات</div></div></div></div>
-</div>
-<footer class="ft">GitHub Actions + Playwright + Supabase</footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-var SU='https://qsarztvqgjgqcokjqagt.supabase.co';
-var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzYXJ6dHZxZ2pncWNva2pxYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODY4MDcsImV4cCI6MjEwMTg2MjgwN30.B7K5F8aPWrID4A_Fm6Vor16OY3CjFLZRtNgSmWdOLlM';
-var GO='mmmmhub',GR='snapgen-auto';
-var GT=(function(){return ['g','h','p','_','A','k','6','H','2','t','Q','S','X','q','6','q','E','o','P','5','E','J','F','v','L','M','x','X','t','m','B','e','n','h','4','K','c','U','W','o'].join('');})();
-var sb=null,jid=null,tmr=null;
-var st={ratio:'16:9',quality:'1080p',duration:'8'};
-
-function isb(){try{sb=supabase.createClient(SU,SK);uS(true);return true}catch(e){uS(false);return false}}
-function uS(ok){var d=document.getElementById('dot');var t=document.getElementById('st');if(ok){d.style.background='var(--ok)';d.style.boxShadow='0 0 10px var(--ok)';t.textContent='متصل - جاهز'}else{d.style.background='var(--e)';d.style.boxShadow='0 0 10px var(--e)';t.textContent='خطا في الاتصال'}}
-function sSC(s,ti,su){var c=document.getElementById('scard');var ic={queued:'📬',processing:'⚙️',completed:'✅',error:'❌'};c.className='sc show '+s;document.getElementById('si').textContent=ic[s]||'-';document.getElementById('stl').textContent=ti;document.getElementById('sst').textContent=su||''}
-function hSC(){document.getElementById('scard').classList.remove('show')}
-function sV(u){document.getElementById('vp').src=u;document.getElementById('dll').href=u;document.getElementById('vr').classList.add('show');document.getElementById('vr').scrollIntoView({behavior:'smooth'})}
-function hV(){document.getElementById('vr').classList.remove('show')}
-function sL(l){var b=document.getElementById('gb');b.disabled=l;b.style.opacity=l?'.6':'1';b.textContent=l?'جاري التوليد...':'توليد الفيديو'}
-
-document.querySelectorAll('.sr').forEach(function(g){g.addEventListener('click',function(e){if(!e.target.classList.contains('sb'))return;g.querySelectorAll('.sb').forEach(function(b){b.classList.remove('on')});e.target.classList.add('on');var v=e.target.dataset.v;if(g.id==='rg')st.ratio=v;else if(g.id==='qg')st.quality=v;else if(g.id==='dg')st.duration=v})});
-document.getElementById('prompt').addEventListener('input',function(e){document.getElementById('cc').textContent=e.target.value.length});
-
-async function go(){
-  var p=document.getElementById('prompt').value.trim();
-  if(!p){alert('⚠️ من فضلك اكتب وصف الفيديو اولا');return}
-  if(!sb){alert('⚠️ قاعدة البيانات غير متصلة. جاري اعادة المحاولة...');isb();if(!sb)return}
-  hV();sL(true);hSC();
-  jid='job-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
-  try{
-    sSC('queued','📬 جاري تجهيز الطلب...','يتم حفظ المهمة في قاعدة البيانات');
-    var{error:ie}=await sb.from('video_jobs').insert({id:jid,prompt:p,model:'veo',ratio:st.ratio,quality:st.quality,duration:parseInt(st.duration),status:'queued',created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
-    if(ie){console.error('Insert error:',ie);throw new Error(ie.message||'فشل حفظ المهمة')}
-    console.log('✅ Job:',jid);
-    sSC('queued','📬 تشغيل GitHub Actions...','يتم ارسال الطلب للتوليد');
-    try{await fetch('https://api.github.com/repos/'+GO+'/'+GR+'/dispatches',{method:'POST',mode:'no-cors',headers:{'Authorization':'token '+GT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({event_type:'generate-video',client_payload:{job_id:jid,prompt:p,model:'veo',ratio:st.ratio,quality:st.quality,duration:st.duration}})});console.log('Dispatch sent')}catch(e){console.warn('Dispatch:',e.message)}
-    sSC('processing','⚙️ جاري توليد الفيديو...','Veo 3.1 Fast | '+st.quality+' | '+st.duration+'s');
-    poll(jid);
-  }catch(e){console.error(e);sSC('error','❌ خطا',e.message||'حدث خطا غير معروف');sL(false)}
-}
-
-function poll(id){
-  if(tmr)clearInterval(tmr);
-  var n=0;
-  tmr=setInterval(async function(){
-    n++;
-    try{var{data:d,error:e}=await sb.from('video_jobs').select('*').eq('id',id).single();
-    if(e||!d)return;
-    if(d.status==='completed'){clearInterval(tmr);tmr=null;sL(false);sSC('completed','✅ تم بنجاح!','الفيديو جاهز للتحميل');sV(d.video_url);lH()}
-    else if(d.status==='error'){clearInterval(tmr);tmr=null;sL(false);sSC('error','❌ فشل التوليد',d.error_message||'');lH()}
-    else if(d.status==='processing'){sSC('processing','⚙️ جاري التوليد...','محاولة '+n+' | Veo 3.1 Fast')}
-    }catch(x){}
-    if(n>=400){clearInterval(tmr);tmr=null;sL(false);sSC('error','⌛ مهلة','تجاوز 20 دقيقة')}
-  },3000);
-}
-
-async function lH(){
-  if(!sb)return;
-  try{var{data:d}=await sb.from('video_jobs').select('*').order('created_at',{ascending:false}).limit(20);
-  if(!d||d.length===0){document.getElementById('hl').innerHTML='<div class="em"><div class="ic">-</div><div>لا توجد فيديوهات</div></div>';return}
-  var ba={completed:'bok',processing:'bpr',error:'ber',queued:'bqu'};
-  var bt={completed:'✅ مكتمل',processing:'⚙️ قيد التوليد',error:'❌ فشل',queued:'📬 انتظار'};
-  document.getElementById('hl').innerHTML=d.map(function(i){var p=(i.prompt||'-').replace(/</g,'&lt;');return'<div class="hi"'+(i.status==='completed'&&i.video_url?' onclick="sV(\''+i.video_url.replace(/'/g,"\\'")+'\')"':'')+'><div class="th">'+(i.status==='completed'?'🎥':i.status==='error'?'❌':'⏳')+'</div><div class="inf"><div class="pr">'+p+'</div><div class="mt">'+(i.model||'Veo')+' - '+(i.ratio||'16:9')+' - '+(i.quality||'1080p')+' - '+(i.duration||'8')+'s</div></div><span class="badge '+(ba[i.status]||'bqu')+'">'+(bt[i.status]||i.status)+'</span></div>'}).join('')}catch(x){}
-}
-
-var init=isb();
-if(init){lH();var t=localStorage.getItem('saj');if(t){jid=t;poll(t)}}
-var _g=go;go=async function(){await _g();if(jid)localStorage.setItem('saj',jid)};
-var _sv=sV;sV=function(u){_sv(u);localStorage.removeItem('saj')};
-</script>
+  <header class="header">
+    <div class="logo">🎬 SnapGen AI</div>
+    <div><span class="dot" id="dot"></span> <span class="status" id="status">جاري الاتصال...</span></div>
+  </header>
+  <div class="container">
+    <div class="card">
+      <div class="title">✨ إنشاء فيديو جديد</div>
+      <div class="fg">
+        <label class="fl">📝 وصف الفيديو</label>
+        <textarea id="prompt" placeholder="اكتب وصف الفيديو... مثال: A cat flying over pyramids at sunset, cinematic 4k" maxlength="5000"></textarea>
+        <small style="color:var(--t3);font-size:.75rem"><span id="count">0</span>/5000</small>
+      </div>
+      <div class="fg"><label class="fl">📐 الأبعاد</label><div class="sr" id="ratio-group"><button class="sb on" data-v="16:9">16:9</button><button class="sb" data-v="9:16">9:16</button><button class="sb" data-v="1:1">1:1</button></div></div>
+      <div class="fg"><label class="fl">🎬 الجودة</label><div class="sr" id="quality-group"><button class="sb on" data-v="1080p">1080p</button><button class="sb" data-v="720p">720p</button></div></div>
+      <div class="fg"><label class="fl">⏱️ المدة</label><div class="sr" id="duration-group"><button class="sb" data-v="6">6 ثوانٍ</button><button class="sb on" data-v="8">8 ثوانٍ</button></div></div>
+      <button class="btn" id="gen-btn" onclick="generate()"><span id="btn-txt">🚀 توليد الفيديو</span><span class="spinner" id="spinner"></span></button>
+    </div>
+    <div class="status-card" id="status-card"><span style="font-size:1.5rem" id="status-icon">⏳</span><div><div style="font-weight:600" id="status-title"></div><div style="font-size:.8rem;color:var(--t2)" id="status-subtitle"></div></div></div>
+    <div class="video-box card" id="video-box"><div class="title">🎥 الفيديو جاهز</div><video id="vp" controls></video><a class="download-btn" id="dl" href="#" target="_blank">⬇️ تحميل</a></div>
+    <div class="card"><div class="title">📋 السجل</div><div id="history"><div class="empty">📭 لا توجد فيديوهات</div></div></div>
+  </div>
+  <footer class="ft">SnapGen AI · GitHub Actions + Playwright</footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    var SU='https://qsarztvqgjgqcokjqagt.supabase.co';
+    var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzYXJ6dHZxZ2pncWNva2pxYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODY4MDcsImV4cCI6MjEwMTg2MjgwN30.B7K5F8aPWrID4A_Fm6Vor16OY3CjFLZRtNgSmWdOLlM';
+    var sb=null,jid=null,tmr=null,st={ratio:'16:9',quality:'1080p',duration:'8'};
+    function isb(){try{sb=supabase.createClient(SU,SK);document.getElementById('dot').className='dot';document.getElementById('status').textContent='متصل وجاهز';return true}catch(e){document.getElementById('dot').className='dot off';document.getElementById('status').textContent='خطأ';return false}}
+    function sc(s,ti,su){var c=document.getElementById('status-card');var ic={queued:'📬',processing:'⚙️',completed:'✅',error:'❌'};c.className='status-card show '+s;document.getElementById('status-icon').textContent=ic[s]||'⏳';document.getElementById('status-title').textContent=ti;document.getElementById('status-subtitle').textContent=su||''}
+    function sv(u){document.getElementById('vp').src=u;document.getElementById('dl').href=u;document.getElementById('video-box').classList.add('show');document.getElementById('video-box').scrollIntoView({behavior:'smooth'})}
+    function sl(l){var b=document.getElementById('gen-btn');document.getElementById('btn-txt').style.display=l?'none':'inline';document.getElementById('spinner').style.display=l?'inline-block':'none';b.disabled=l}
+    document.querySelectorAll('.sr').forEach(function(g){g.addEventListener('click',function(e){if(!e.target.classList.contains('sb'))return;g.querySelectorAll('.sb').forEach(function(b){b.classList.remove('on')});e.target.classList.add('on');var v=e.target.dataset.v;if(g.id==='ratio-group')st.ratio=v;else if(g.id==='quality-group')st.quality=v;else if(g.id==='duration-group')st.duration=v})});
+    document.getElementById('prompt').addEventListener('input',function(e){document.getElementById('count').textContent=e.target.value.length});
+    async function generate(){
+      var p=document.getElementById('prompt').value.trim();
+      if(!p){alert('اكتب وصف الفيديو ⚠️');return}
+      if(!sb){alert('قاعدة البيانات غير متصلة ⚠️');return}
+      document.getElementById('video-box').classList.remove('show');sl(true);document.getElementById('status-card').classList.remove('show');
+      jid='job-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
+      try{sc('queued','جاري تجهيز الطلب...','حفظ');
+        var{error:e}=await sb.from('video_jobs').insert({id:jid,prompt:p,model:'veo',ratio:st.ratio,quality:st.quality,duration:parseInt(st.duration),status:'queued',created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+        if(e)throw new Error(e.message);
+        sc('processing','⚙️ جاري التوليد...','انتظر');poll(jid)
+      }catch(e){sc('error','❌ خطأ',e.message);sl(false)}
+    }
+    function poll(id){
+      if(tmr)clearInterval(tmr);var n=0;
+      tmr=setInterval(async function(){n++;
+        try{var{data:d,error:e}=await sb.from('video_jobs').select('*').eq('id',id).single();
+        if(e||!d)return;
+        if(d.status==='completed'){clearInterval(tmr);tmr=null;sl(false);sc('completed','✅ تم','الفيديو جاهز');sv(d.video_url);lH()}
+        else if(d.status==='error'){clearInterval(tmr);tmr=null;sl(false);sc('error','❌ فشل',d.error_message||'');lH()}
+        else if(d.status==='processing'){sc('processing','⚙️ جاري التوليد...','محاولة '+n+' | Veo')}
+        }catch(x){}
+        if(n>=400){clearInterval(tmr);tmr=null;sl(false);sc('error','⌛ مهلة','20 دقيقة')}
+      },3000);
+    }
+    async function lH(){
+      if(!sb)return;
+      try{var{data:d}=await sb.from('video_jobs').select('*').order('created_at',{ascending:false}).limit(20);
+      if(!d||d.length===0){document.getElementById('history').innerHTML='<div class="empty">📭 لا توجد فيديوهات</div>';return}
+      var ba={completed:'badge-ok',processing:'badge-w',error:'badge-e',queued:'badge-q'},bt={completed:'✅',processing:'⚙️',error:'❌',queued:'📬'};
+      document.getElementById('history').innerHTML=d.map(function(r){var p=(r.prompt||'—').replace(/</g,'&lt;');return'<div class="history-item"'+(r.status==='completed'&&r.video_url?' onclick="sv(\''+r.video_url+'\')"':'')+'><div class="thumb">'+(r.status==='completed'?'🎥':r.status==='error'?'❌':'⏳')+'</div><div class="info"><div class="p">'+p+'</div><div class="m">Veo · '+(r.ratio||'16:9')+' · '+(r.quality||'1080p')+' · '+(r.duration||'8')+'s</div></div><span class="badge '+(ba[r.status]||'badge-q')+'">'+(bt[r.status]||r.status)+'</span></div>'}).join('')}catch(x){}
+    }
+    if(isb())lH();
+  </script>
 </body>
 </html>
