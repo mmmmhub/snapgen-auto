@@ -1,0 +1,43 @@
+name: Video Generator
+on:
+  repository_dispatch:
+    types: [generate-video]
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: automation/package-lock.json
+      - uses: actions/cache@v4
+        id: pw
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('automation/package-lock.json') }}
+          restore-keys: pw-${{ runner.os }}-
+      - run: npm ci
+        working-directory: automation
+      - if: steps.pw.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+        working-directory: automation
+      - run: npx playwright install-deps chromium 2>/dev/null || true
+      - run: npx tsx src/generate.ts
+        working-directory: automation
+        env:
+          SNAPGEN_EMAIL: ${{ secrets.SNAPGEN_EMAIL }}
+          SNAPGEN_PASSWORD: ${{ secrets.SNAPGEN_PASSWORD }}
+          SNAPGEN_BASE_URL: ${{ secrets.SNAPGEN_BASE_URL }}
+          JOB_ID: ${{ github.event.client_payload.job_id }}
+          VIDEO_PROMPT: ${{ github.event.client_payload.prompt }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - if: failure()
+        env:
+          JOB_ID: ${{ github.event.client_payload.job_id }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node -e "const{createClient}=require('@supabase/supabase-js');(async()=>{const s=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_KEY);await s.from('video_jobs').update({status:'error',error_message:'Workflow failed',updated_at:new Date().toISOString()}).eq('id',process.env.JOB_ID)})()"
